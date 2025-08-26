@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chew Chew Cake</title>
+  <!-- Tailwind CDN (for quick styling) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"; }
+    .btn { @apply px-4 py-2 rounded-md font-semibold transition-all duration-200; }
+    .btn-primary { @apply bg-red-900 text-white hover:bg-red-800; }
+    .btn-secondary { @apply bg-gray-200 text-gray-900 hover:bg-gray-300; }
+    .btn-success { @apply bg-green-600 text-white hover:bg-green-700; }
+    .btn-warning { @apply bg-red-900 text-white hover:bg-red-800; }
+    .opt { @apply p-4 rounded-lg text-lg font-medium transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200; }
+    .opt.active { @apply bg-red-900 text-white shadow-md scale-105; }
+    .color-pill { width: 24px; height: 24px; border-radius: 9999px; display: inline-block; border: 1px solid #ccc; margin-inline-end: .5rem; vertical-align: middle; }
+    /* Modal */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
+    .overlay.show { display: flex; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-white to-red-50 min-h-screen text-gray-900">
+
+  <!-- Header -->
+  <header class="max-w-5xl mx-auto p-4 flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3">
+      <!-- Change path to your actual logo -->
+      <img id="logo" src="Brown Cute Cookies Logo (3).png" alt="Chew Chew Cake Logo" class="h-16 w-auto rounded-md shadow-sm">
+      <h1 class="text-2xl font-extrabold">Chew Chew Cake</h1>
+    </div>
+    <div class="flex gap-2">
+      <button id="toggleCheckoutBack" class="btn btn-secondary hidden">العودة للتعديل</button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4">
+    <div id="card" class="bg-white rounded-xl shadow-xl p-6">
+
+      <!-- Preview -->
+      <div class="mb-10 text-center relative">
+        <img
+          id="previewImg"
+          src="https://placehold.co/400x300/f8f8f8/800000?text=كيكتك+هنا"
+          alt="معاينة الكيك"
+          class="mx-auto rounded-2xl shadow-xl border-4 border-red-200"
+        />
+        <div id="totalBadge" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg text-2xl font-bold text-red-900">
+          السعر الكلي: 0 شيكل
+        </div>
+      </div>
+
+      <h2 class="text-xl mb-6 font-extrabold text-center">صمم كيكتك الخاصة! 🎂</h2>
+
+      <!-- Customization sections -->
+      <div id="builder"></div>
+
+      <!-- Custom design -->
+      <div id="customDesignBlock" class="mb-8 p-6 bg-white rounded-xl shadow-lg hidden">
+        <h3 class="text-2xl font-bold mb-4">تفاصيل التصميم الخاص (أضف ملاحظات أو صورة)</h3>
+        <textarea id="customNotes" rows="4" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+          placeholder="اكتب تفاصيل التصميم (مثال: وحيد القرن الذهبي + اسم سارة بالكوفي)"></textarea>
+        <label for="designFile" class="block text-gray-700 text-sm font-bold mb-2">أو حمّل صورة للتصميم:</label>
+        <input type="file" id="designFile" accept="image/*" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
+        <div id="imgPreviewWrap" class="mt-4 text-center hidden">
+          <p class="text-gray-700 mb-2">معاينة الصورة المحمّلة:</p>
+          <img id="imgPreview" class="mx-auto max-h-48 rounded-lg shadow-md" alt="معاينة التصميم">
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div id="summary" class="mb-10 p-6 bg-white rounded-xl shadow-lg border-r-4 border-red-500"></div>
+
+      <!-- CTA -->
+      <div class="text-center">
+        <button id="goCheckout" class="btn btn-warning text-xl rounded-full shadow-lg">متابعة للدفع</button>
+      </div>
+
+      <!-- Checkout (hidden initially) -->
+      <div id="checkout" class="mt-8 hidden">
+        <h2 class="text-xl mb-4 font-extrabold text-center">الدفع</h2>
+
+        <div class="mb-6 p-6 bg-white rounded-xl shadow-lg border-r-4 border-red-900" id="checkoutSummary"></div>
+
+        <div class="mb-6 p-6 bg-white rounded-xl shadow-lg">
+          <h3 class="text-2xl font-bold mb-4">معلومات التواصل</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">الاسم الكامل</label>
+              <input id="custName" type="text" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">رقم الهاتف</label>
+              <input id="custPhone" type="tel" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-bold mb-2">البريد الإلكتروني (اختياري)</label>
+              <input id="custEmail" type="email" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-bold mb-2">عنوان التوصيل</label>
+              <textarea id="custAddress" rows="3" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-bold mb-2">أضف ملاحظاتك (اختياري)</label>
+              <textarea id="deliveryNotes" rows="3" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="مثال: التوصيل بعد الساعة 5 مساءً"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-6 p-6 bg-white rounded-xl shadow-lg">
+          <h3 class="text-2xl font-bold mb-4">اختر طريقة الدفع</h3>
+          <div class="flex flex-wrap gap-3">
+            <button data-pay="stripe" class="btn bg-red-200 text-red-800 hover:bg-red-300">الدفع بـ Stripe</button>
+            <button data-pay="paypal" class="btn bg-blue-200 text-blue-800 hover:bg-blue-300">باي بال</button>
+            <button data-pay="cod" class="btn bg-green-200 text-green-800 hover:bg-green-300">الدفع عند الاستلام</button>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center gap-4">
+          <a id="waLink" target="_blank" rel="noreferrer" class="w-full max-w-sm">
+            <button class="btn btn-success text-xl rounded-full shadow-lg w-full">إرسال عبر واتساب</button>
+          </a>
+          <button id="confirmOrder" class="btn btn-primary text-xl rounded-full shadow-lg w-full max-w-sm">تأكيد الطلب النهائي</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="overlay">
+    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center">
+      <h3 class="text-xl font-bold mb-3">رسالة Chew Chew Cake</h3>
+      <p id="modalMsg" class="text-lg font-semibold mb-6"></p>
+      <button onclick="hideModal()" class="btn btn-primary">حسناً</button>
+    </div>
+  </div>
+
+<script>
+/* ====== Data ====== */
+const ILS = "شيكل";
+const shapes = [
+  { id: "round", name: "دائري", price: 0, img: "https://placehold.co/100x70/ffe4e1/8b0000?text=دائري" },
+  { id: "square", name: "مربع",  price: 0, img: "https://placehold.co/100x70/fff0f5/dc143c?text=مربع" },
+  { id: "heart", name: "قلب",    price: 0, img: "https://placehold.co/100x70/ffc0cb/ff69b4?text=قلب" },
+  { id: "rectangle", name: "مستطيل", price: 0, img: "https://placehold.co/100x70/add8e6/4682b4?text=مستطيل" },
+  { id: "star", name: "نجمة", price: 0, img: "https://placehold.co/100x70/ffdead/daa520?text=نجمة" },
+];
+const flavors = [
+  { id: "chocolate", name: "شوكولاتة", price: 12, hex: "#8B4513" },
+  { id: "vanilla", name: "فانيليا", price: 8, hex: "#F5DEB3" },
+  { id: "strawberry", name: "فراولة", price: 14, hex: "#FC5A8D" },
+  { id: "red-velvet", name: "ريد فيلفت", price: 15, hex: "#800000" },
+  { id: "lemon", name: "ليمون", price: 10, hex: "#FACC15" },
+  { id: "pistachio", name: "فستق", price: 13, hex: "#90EE90" },
+];
+const colors = [
+  { id: "white", name: "أبيض", hex: "#FFFFFF", text: "#333", price: 0 },
+  { id: "maroon", name: "خمري", hex: "#800000", text: "#fff", price: 0 },
+  { id: "pink", name: "وردي", hex: "#FBCFE8", text: "#D946EF", price: 0 },
+  { id: "blue", name: "أزرق", hex: "#BFDBFE", text: "#3B82F6", price: 0 },
+  { id: "green", name: "أخضر", hex: "#D1FAE5", text: "#10B981", price: 0 },
+  { id: "yellow", name: "أصفر", hex: "#FDE68A", text: "#F59E0B", price: 0 },
+  { id: "black", name: "أسود", hex: "#000000", text: "#fff", price: 0 },
+  { id: "gold", name: "ذهبي", hex: "#FFD700", text: "#333", price: 0 },
+  { id: "other", name: "لون آخر", hex: "#CCCCCC", text: "#333", price: 0 },
+];
+const designs = [
+  { id: "simple", name: "بسيط", price: 5, hex: "#A52A2A" },
+  { id: "floral", name: "زهور", price: 15, hex: "#8B0000" },
+  { id: "cartoon", name: "رسوم كرتونية", price: 20, hex: "#B22222" },
+  { id: "custom", name: "تصميم خاص", price: 30, hex: "#CD5C5C" },
+];
+const creams = [
+  { id: "buttercream", name: "كريمة الزبدة", price: 3, hex: "#F3E5AB" },
+  { id: "whipped_cream", name: "كريمة مخفوقة", price: 2, hex: "#F0F8FF" },
+  { id: "ganache", name: "جاناش شوكولاتة", price: 4, hex: "#3F250C" },
+  { id: "cream_cheese", name: "كريمة الجبن", price: 5, hex: "#F8F8FF" },
+];
+const fillings = [
+  { id: "none", name: "بدون حشوة", price: 0 },
+  { id: "strawberry_jam", name: "مربى الفراولة (طبيعي)", price: 5, hex: "#D22B2B" },
+  { id: "raspberry_compote", name: "كومبوت التوت (طبيعي)", price: 6, hex: "#8B0000" },
+  { id: "lemon_curd", name: "كريم الليمون (طبيعي)", price: 4, hex: "#FFEF00" },
+  { id: "chocolate_fudge", name: "فادج الشوكولاتة", price: 7, hex: "#4C382A" },
+  { id: "caramel", name: "كراميل مملح", price: 5, hex: "#FFD700" },
+  { id: "nutella", name: "نوتيلا", price: 8, hex: "#5C3D2E" },
+  { id: "other", name: "حشوة أخرى", price: 0 },
+];
+
+/* ====== Application State ====== */
+const state = {
+  shape: "", flavor: "", color: "", design: "", cream: "", filling: "",
+  customColorText: "", customFillingText: "", customNotes: "", imgURL: null,
+  deliveryNotes: "", // New state variable
+  total: 0, pay: "", // stripe | paypal | cod
+};
+
+/* ====== Helper Functions ====== */
+const el = (sel) => document.querySelector(sel);
+const els = (sel) => Array.from(document.querySelectorAll(sel));
+
+function showModal(msg) {
+  el("#modalMsg").textContent = msg;
+  el("#modal").classList.add("show");
+}
+function hideModal() { el("#modal").classList.remove("show"); }
+
+function priceOf(list, id) { return (list.find(i => i.id === id)?.price) || 0; }
+function nameOf(list, id) { return (list.find(i => i.id === id)?.name) || ""; }
+function hexOf(list, id) { return (list.find(i => i.id === id)?.hex) || ""; }
+
+function calcTotal() {
+  state.total =
+    priceOf(shapes, state.shape) +
+    priceOf(flavors, state.flavor) +
+    priceOf(colors, state.color) +
+    priceOf(designs, state.design) +
+    priceOf(creams, state.cream) +
+    priceOf(fillings, state.filling);
+  el("#totalBadge").textContent = `السعر الكلي: ${state.total} ${ILS}`;
+}
+
+function optBtn(o, current, group, hasColor=false, textAlign="text-center") {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `opt${current===o.id ? " active" : ""}`;
+  const colorHex = hasColor ? hexOf(eval(group+'s'), o.id) : null;
+  const textColor = colorHex ? (isLight(colorHex) ? "#333" : "#fff") : "#333";
+  btn.style.backgroundColor = hasColor && o.id !== "other" ? colorHex : "";
+  btn.style.color = hasColor && o.id !== "other" ? textColor : "";
+
+  // Helper to determine if a color is light
+  function isLight(hex) {
+    const c = hex.substring(1); // strip #
+    const rgb = parseInt(c, 16); // convert to integer
+    const r = (rgb >> 16) & 0xff; // get red
+    const g = (rgb >> 8) & 0xff; // get green
+    const b = (rgb >> 0) & 0xff; // get blue
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+    return luma > 150;
+  }
+
+  btn.innerHTML = `
+    <div class="mt-1 ${textAlign}">${o.name}<br/><small>(${o.price} ${ILS})</small></div>
+  `;
+  btn.onclick = () => {
+    state[group] = o.id;
+    // toggle active style
+    btn.parentElement.querySelectorAll(".opt").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    // Special blocks
+    if (group === "design") {
+      el("#customDesignBlock").classList.toggle("hidden", o.id!=="custom");
+    }
+    if (group === "color") {
+      el("#customColorWrap").classList.toggle("hidden", o.id!=="other");
+    }
+    if (group === "filling") {
+      el("#customFillingWrap").classList.toggle("hidden", o.id!=="other");
+    }
+
+    calcTotal();
+    renderSummary();
+    renderCheckoutSummary();
+  };
+  return btn;
+}
+
+function renderGroup(title, list, group, hasColor=false, withImages=false, textAlign="text-center") {
+  const wrap = document.createElement("div");
+  wrap.className = "mb-8 p-6 bg-white rounded-xl shadow-lg";
+  const h = document.createElement("h3");
+  h.className = "text-2xl font-bold mb-4";
+  h.textContent = title;
+  wrap.appendChild(h);
+
+  const grid = document.createElement("div");
+  grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4";
+  list.forEach(o => {
+    const btn = optBtn(o, state[group], group, hasColor, textAlign);
+    if (withImages && o.img) {
+      btn.insertAdjacentHTML("afterbegin", `<img src="${o.img}" alt="${o.name}" class="w-16 h-12 object-cover rounded-md mb-2 block mx-auto" />`);
+    }
+    grid.appendChild(btn);
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function renderBuilder() {
+  const builder = el("#builder");
+  builder.innerHTML = "";
+  builder.appendChild(renderGroup("اختر الشكل", shapes, "shape", false, true, "text-right"));
+  builder.appendChild(renderGroup("اختر النكهة", flavors, "flavor", true));
+  builder.appendChild(renderGroup("اختر اللون", colors, "color", true));
+
+  // Custom color input
+  const customColor = document.createElement("div");
+  customColor.id = "customColorWrap";
+  customColor.className = "mb-8 p-6 bg-white rounded-xl shadow-lg hidden";
+  customColor.innerHTML = `
+    <h3 class="text-2xl font-bold mb-4">حدد لونك المخصص</h3>
+    <input id="customColorText" type="text" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="مثال: تركوازي / لافندر">
+  `;
+  builder.appendChild(customColor);
+
+  builder.appendChild(renderGroup("اختر التصميم", designs, "design", true));
+  builder.appendChild(renderGroup("اختر نوع الكريمة", creams, "cream", true));
+  builder.appendChild(renderGroup("اختر الحشوة", fillings, "filling", true));
+
+  const customFill = document.createElement("div");
+  customFill.id = "customFillingWrap";
+  customFill.className = "mb-8 p-6 bg-white rounded-xl shadow-lg hidden";
+  customFill.innerHTML = `
+    <h3 class="text-2xl font-bold mb-4">حدد حشوتك المخصصة</h3>
+    <input id="customFillingText" type="text" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="مثال: موس مانجو / برالين بكان">
+  `;
+  builder.appendChild(customFill);
+
+  // Connect custom fields
+  el("#customColorText").addEventListener("input", e => { state.customColorText = e.target.value.trim(); renderSummary(); renderCheckoutSummary(); });
+  el("#customFillingText").addEventListener("input", e => { state.customFillingText = e.target.value.trim(); renderSummary(); renderCheckoutSummary(); });
+}
+
+function summarize() {
+  const colorName = state.color === "other" ? (state.customColorText || "—") : (nameOf(colors, state.color) || "—");
+  const fillingName = state.filling === "other" ? (state.customFillingText || "—") : (nameOf(fillings, state.filling) || "—");
+  return `
+    <p class="text-lg mb-2"><span class="font-semibold">الشكل:</span> ${nameOf(shapes, state.shape) || "لم يتم الاختيار"} (${priceOf(shapes, state.shape)} ${ILS})</p>
+    <p class="text-lg mb-2"><span class="font-semibold">النكهة:</span> ${nameOf(flavors, state.flavor) || "لم يتم الاختيار"} (${priceOf(flavors, state.flavor)} ${ILS})</p>
+    <p class="text-lg mb-2"><span class="font-semibold">اللون:</span> ${colorName} (${priceOf(colors, state.color)} ${ILS})</p>
+    <p class="text-lg mb-2"><span class="font-semibold">التصميم:</span> ${nameOf(designs, state.design) || "لم يتم الاختيار"} (${priceOf(designs, state.design)} ${ILS})</p>
+    <p class="text-lg mb-2"><span class="font-semibold">الكريمة:</span> ${nameOf(creams, state.cream) || "لم يتم الاختيار"} (${priceOf(creams, state.cream)} ${ILS})</p>
+    <p class="text-lg mb-2"><span class="font-semibold">الحشوة:</span> ${fillingName} (${priceOf(fillings, state.filling)} ${ILS})</p>
+    <p class="text-xl font-bold mt-4">إجمالي السعر: <span class="text-red-900">${state.total} ${ILS}</span></p>
+  `;
+}
+
+function renderSummary() {
+  el("#summary").innerHTML = `
+    <h3 class="text-2xl font-bold mb-4">ملخص الطلب</h3>
+    ${summarize()}
+  `;
+}
+function renderCheckoutSummary() {
+  if (!el("#checkout").classList.contains("hidden")) {
+    el("#checkoutSummary").innerHTML = `
+      <h3 class="text-2xl font-bold mb-4">ملخص الطلب</h3>
+      ${summarize()}
+      ${state.design === "custom" && state.customNotes ? `<p class="mt-2"><span class="font-semibold">ملاحظات التصميم:</span> ${state.customNotes}</p>` : ""}
+      ${state.imgURL ? `<div class="mt-3 flex items-center gap-3"><span class="font-semibold">صورة التصميم:</span><img src="${state.imgURL}" class="h-16 w-16 object-cover rounded-md" alt="تصميم"></div>` : ""}
+      <p class="text-red-900 font-semibold mt-4">وقت التحضير المقدر: <span class="font-bold">2-4 ساعات</span></p>
+      <p class="text-red-900 font-semibold">وقت التوصيل المقدر: <span class="font-bold">1-2 أيام عمل</span></p>
+    `;
+  }
+}
+
+/* ====== Initialization ====== */
+renderBuilder();
+calcTotal();
+renderSummary();
+
+/* ====== Special Element Events ====== */
+// Design image
+el("#designFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    state.imgURL = url;
+    el("#imgPreview").src = url;
+    el("#imgPreviewWrap").classList.remove("hidden");
+  } else {
+    state.imgURL = null;
+    el("#imgPreviewWrap").classList.add("hidden");
+  }
+  renderCheckoutSummary();
+});
+
+// Custom design notes
+el("#customNotes").addEventListener("input", (e) => {
+  state.customNotes = e.target.value.trim();
+  renderCheckoutSummary();
+});
+
+// Delivery notes
+el("#deliveryNotes").addEventListener("input", (e) => {
+  state.deliveryNotes = e.target.value.trim();
+  updateWhatsAppLink();
+});
+
+// Go to Checkout
+el("#goCheckout").addEventListener("click", () => {
+  if (!state.shape || !state.flavor || (!state.color && state.color!=="other") || !state.design || !state.cream || (!state.filling && state.filling!=="other")) {
+    showModal("الرجاء اختيار جميع خيارات الكيك قبل المتابعة.");
+    return;
+  }
+  if (state.color === "other" && !state.customColorText) {
+    showModal("حدد لونك المخصص (مثال: تركوازي).");
+    return;
+  }
+  if (state.filling === "other" && !state.customFillingText) {
+    showModal("حدد حشوتك المخصصة (مثال: موس مانجو).");
+    return;
+  }
+  if (state.design === "custom" && !state.customNotes && !state.imgURL) {
+    showModal("الرجاء إضافة ملاحظات لتصميمك الخاص أو تحميل صورة.");
+    return;
+  }
+  el("#checkout").classList.remove("hidden");
+  el("#toggleCheckoutBack").classList.remove("hidden");
+  renderCheckoutSummary();
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+});
+
+// Back from Checkout
+el("#toggleCheckoutBack").addEventListener("click", () => {
+  el("#checkout").classList.add("hidden");
+  el("#toggleCheckoutBack").classList.add("hidden");
+});
+
+// Choose payment method
+els("[data-pay]").forEach(b => {
+  b.addEventListener("click", () => {
+    state.pay = b.dataset.pay; // stripe / paypal / cod
+    els("[data-pay]").forEach(x => x.classList.remove("scale-105","shadow-md"));
+    b.classList.add("scale-105","shadow-md");
+  });
+});
+
+// WhatsApp link generated from state
+function updateWhatsAppLink() {
+  const colorName = state.color === "other" ? (state.customColorText || "—") : (nameOf(colors, state.color) || "—");
+  const fillingName = state.filling === "other" ? (state.customFillingText || "—") : (nameOf(fillings, state.filling) || "—");
+
+  let text =
+`طلب كيكة جديد:
+الشكل: ${nameOf(shapes, state.shape) || "—"}
+النكهة: ${nameOf(flavors, state.flavor) || "—"}
+اللون: ${colorName}
+التصميم: ${nameOf(designs, state.design) || "—"}${state.design==="custom" && state.customNotes ? ` (${state.customNotes})` : ""}
+الكريمة: ${nameOf(creams, state.cream) || "—"}
+الحشوة: ${fillingName}
+
+${"السعر الكلي"}: ${state.total} ${ILS}`;
+
+if (state.deliveryNotes) {
+    text += `\n\nملاحظات التوصيل: ${state.deliveryNotes}`;
+}
+
+  const url = "https://wa.me/?text=" + encodeURIComponent(text);
+  el("#waLink").href = url;
+}
+
+// Confirm order
+el("#confirmOrder").addEventListener("click", () => {
+  const name = el("#custName").value.trim();
+  const phone = el("#custPhone").value.trim();
+  const address = el("#custAddress").value.trim();
+  if (!name || !phone || !address) {
+    showModal("الرجاء ملء جميع معلومات التواصل المطلوبة.");
+    return;
+  }
+  if (!state.pay) {
+    showModal("الرجاء اختيار طريقة الدفع.");
+    return;
+  }
+  updateWhatsAppLink();
+  showModal("تم استلام طلبك بنجاح! سيتم التواصل معك قريبًا لتأكيد الطلب.");
+});
+
+</script>
+</body>
+</html>
